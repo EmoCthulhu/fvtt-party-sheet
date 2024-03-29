@@ -735,6 +735,8 @@ export class PartySheetForm extends FormApplication {
     // @ts-ignore
     $('select[name="fvtt-party-sheet-system"]', html).change(this.changeSystem.bind(this));
     // @ts-ignore
+    $('button[name="fvtt-party-sheet-creator"]', html).click(this.openCreator.bind(this));
+    // @ts-ignore
     $('button[name="feedback"]', html).click(this.onFeedback.bind(this));
     // @ts-ignore
     $('button[name="bugreport"]', html).click(this.onBugReport.bind(this));
@@ -751,6 +753,14 @@ export class PartySheetForm extends FormApplication {
       // @ts-ignore
       $(`div[data-dropdownsection="${dropdownSection}"][data-dropdownoption="${dropdownValue}"]`).show();
     });
+  }
+
+  // eslint-disable-next-line no-unused-vars
+  openCreator(event) {
+    // Fire the hook "openPartySheetCreator"
+    console.log("firing hook");
+    // @ts-ignore
+    Hooks.call("renderPartySheetCreator");
   }
 
   onFeedback(event) {

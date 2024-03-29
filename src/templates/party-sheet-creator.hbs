@@ -1,0 +1,51 @@
+<div class="fvtt-party-sheet-creator">
+  <div id="fvtt-creator-toolbar">
+    <button id="fvtt-creator-author-btn">Author Info</button>
+    <div id="fvtt-creator-column-block">
+      <p>Columns</p>
+      <div>
+        <button id="fvtt-creator-column-dec-btn">
+          <i class="fas fa-minus"></i>
+        </button>
+        <input type="text" id="fvtt-creator-column-count" readonly value="1">
+        <button id="fvtt-creator-column-inc-btn">
+          <i class="fas fa-plus"></i>
+        </button>
+      </div>
+    </div>
+    <div id="fvtt-creator-row-block">
+      <p>Rows</p>
+      <div>
+        <button id="fvtt-creator-row-dec-btn">
+          <i class="fas fa-minus"></i>
+        </button>
+        <input type="text" id="fvtt-creator-row-count" readonly value="1">
+        <button id="fvtt-creator-row-inc-btn">
+          <i class="fas fa-plus"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div id="fvtt-creator-select-zone">
+    {{#each coreItems}}
+    <div class="dd-item" data-itemkey="{{@key}}">{{@key}}</div>
+    {{/each}}
+  </div>
+  <div id="fvtt-creator-table-container">
+    <table id="fvtt-creator-table">
+      <thead>
+        <tr>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div id="fvtt-creator-output">
+    <textarea id="fvtt-creator-output-textarea" readonly></textarea>
+  </div>
+</div>

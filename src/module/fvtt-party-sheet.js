@@ -2,8 +2,10 @@
 import { registerSettings } from "./app/settings.js";
 import { PartySheetForm } from "./app/party-sheet.js";
 import { log, loadSystemTemplates, toProperCase, areTemplatesLoaded } from "./utils.js";
+import { PartySheetCreatorForm } from "./app/party-sheet-creator.js";
 
 let currentPartySheet = null;
+let currentCreatorSheet = null;
 
 // @ts-ignore
 Handlebars.registerHelper("hccontains", function (needle, haystack, options) {
@@ -165,6 +167,20 @@ function togglePartySheet() {
   }
 }
 
+// /**
+//  *
+//  *
+//  */
+// function toggleCreatorSheet() {
+//   if (currentCreatorSheet?.rendered) {
+//     currentCreatorSheet.close();
+//   } else {
+//     currentCreatorSheet = new PartySheetCreatorForm();
+//     // @ts-ignore
+//     currentCreatorSheet.render(true);
+//   }
+// }
+
 const showButton = () => {
   if (areTemplatesLoaded()) {
     // @ts-ignore
@@ -219,6 +235,28 @@ Hooks.on("renderPlayerList", () => {
   }
   if (currentPartySheet?.rendered) {
     currentPartySheet.render(true);
+  }
+});
+
+// @ts-ignore
+Hooks.on("renderPartySheetCreator", () => {
+  if (currentCreatorSheet?.rendered) {
+    currentCreatorSheet.render(true);
+  } else {
+    // @ts-ignore
+    const actor_types = new Set(game.actors.map((actor) => actor.type));
+    // Select one actor of each type from game.actors and put it in an object with it's key being the type
+    const final_objects = {};
+    actor_types.forEach((type) => {
+      // @ts-ignore
+      const f_actor = game.actors.find((actor) => actor.type === type);
+      final_objects[type] = f_actor;
+    });
+    // @ts-ignore
+    final_objects["system"] = game.system;
+    currentCreatorSheet = new PartySheetCreatorForm({ actor_types, inspect_objects: final_objects });
+    // @ts-ignore
+    currentCreatorSheet.render(true);
   }
 });
 
