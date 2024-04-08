@@ -8,11 +8,21 @@ let currentPartySheet = null;
 let currentCreatorSheet = null;
 
 // @ts-ignore
-Handlebars.registerHelper("hccontains", function (needle, haystack, options) {
+Handlebars.registerHelper("inArray", function (value, array, options) {
+  return array.includes(value) ? options.fn(this) : options.inverse(this);
+});
+
+// @ts-ignore
+Handlebars.registerHelper("carray", function () {
+  return Array.prototype.slice.call(arguments, 0, -1);
+});
+
+// @ts-ignore
+Handlebars.registerHelper("hccontains", function (needle, options) {
   // @ts-ignore
   needle = Handlebars.escapeExpression(needle);
   // @ts-ignore
-  haystack = game.settings.get("fvtt-party-sheet", "hiddenCharacters") ?? [];
+  const haystack = game.settings.get("fvtt-party-sheet", "hiddenCharacters") ?? [];
   return haystack.indexOf(needle) > -1 ? options.fn(this) : options.inverse(this);
 });
 
@@ -89,7 +99,8 @@ Handlebars.registerHelper("getMinWidth", function (row, key) {
 // @ts-ignore
 Handlebars.registerHelper("eachInMap", function (map, block) {
   let out = "";
-  Object.keys(map).map(function (prop) {
+  //TODO: replaced map with forEach
+  Object.keys(map).forEach(function (prop) {
     out += block.fn({ key: prop, value: map[prop] });
   });
   return out;
@@ -167,20 +178,6 @@ function togglePartySheet() {
   }
 }
 
-// /**
-//  *
-//  *
-//  */
-// function toggleCreatorSheet() {
-//   if (currentCreatorSheet?.rendered) {
-//     currentCreatorSheet.close();
-//   } else {
-//     currentCreatorSheet = new PartySheetCreatorForm();
-//     // @ts-ignore
-//     currentCreatorSheet.render(true);
-//   }
-// }
-
 const showButton = () => {
   if (areTemplatesLoaded()) {
     // @ts-ignore
@@ -253,7 +250,7 @@ Hooks.on("renderPartySheetCreator", () => {
       final_objects[type] = f_actor;
     });
     // @ts-ignore
-    final_objects["system"] = game.system;
+    // final_objects["system"] = game.system; - Adds System to the list of objects
     currentCreatorSheet = new PartySheetCreatorForm({ actor_types, inspect_objects: final_objects });
     // @ts-ignore
     currentCreatorSheet.render(true);

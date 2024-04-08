@@ -1,5 +1,5 @@
-export /** @type {SystemData} */
-const DND5E = {
+/** @type {import("../types").SystemData} */
+export const DND5E = {
   "name": "dnd5e",
   "system": "dnd5e",
   "author": "Built-In",

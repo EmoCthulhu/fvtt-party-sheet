@@ -1,7 +1,10 @@
 import { DND5E } from "./systems/dnd5e";
 
-let customSystems = [DND5E];
-let selectedSystem = null;
+/** @type {[import("./types").SystemData]} */
+let customTemplates = [DND5E];
+/** @type {import("./types").SystemData}*/
+let selectedTemplate = null;
+
 let templatesLoaded = false;
 
 /**
@@ -60,14 +63,14 @@ export function isForgeVTT() {
  * @param {string} path The path to the template
  * @returns {Promise<void>} A promise that resolves when the template is loaded
  */
-export async function loadSystemTemplate(path) {
+export async function loadSystemTemplateFromFile(path) {
   try {
     const templateName = path.split("/").pop().split(".")[0];
     log(`Loading template: ${templateName}`);
     const template = JSON.parse(await fetch(path).then((r) => r.text()));
     if (template.name && template.author && template.system && template.rows) {
       console.log(`${path} - Good Template`);
-      addCustomSystem(template);
+      customTemplates.push(template);
     } else {
       console.log(`${path} - Bad Template`);
     }
@@ -111,7 +114,7 @@ export async function loadSystemTemplates() {
   });
 
   for (const path of templatePaths) {
-    await loadSystemTemplate(path);
+    await loadSystemTemplateFromFile(path);
   }
 
   templatesLoaded = true;
@@ -131,35 +134,27 @@ export function toProperCase(inputString) {
 }
 
 /**
- * Updates the selected system.
- * @param {*} system - The system to select.
+ * Updates the selected template.
+ * @param {*} template - The template to select.
  */
-export function updateSelectedSystem(system) {
-  selectedSystem = system;
+export function updateSelectedTemplate(template) {
+  selectedTemplate = template;
 }
 
 /**
  * Retrieves the selected system.
- * @returns {*} - The selected system.
+ * @returns {import("./types").SystemData} - The selected system.
  */
-export function getSelectedSystem() {
-  return selectedSystem;
-}
-
-/**
- * Adds a custom system to the list of systems.
- * @param {*} system - The custom system to add.
- */
-export function addCustomSystem(system) {
-  customSystems.push(system);
+export function setSelectedTemplate() {
+  return selectedTemplate;
 }
 
 /**
  * Retrieves the list of custom systems.
- * @returns {*} - The list of custom systems.
+ * @returns {import("./types").SystemData[]} - The list of custom systems.
  */
-export function getCustomSystems() {
-  return customSystems;
+export function getCustomTemplates() {
+  return customTemplates;
 }
 
 /**
@@ -198,8 +193,8 @@ export function extractPropertyByString(obj, path) {
 
 /**
  * Takes a JSON object and trims the strings for value, else, and match.
- * @param {*} item - The item to trim.
- * @returns {*}  - The item with trimmed strings.
+ * @param {import("./types").DirectComplexObject} item - The item to trim.
+ * @returns {import("./types").DirectComplexObject}  - The item with trimmed strings.
  */
 export function trimIfString(item) {
   if (item.text && typeof item.text === "string") {
@@ -217,12 +212,12 @@ export function trimIfString(item) {
 
 /**
  * Parses out plus sumbols and adds values together.
- * @param {*} value - The value to parse.
- * @returns {*} - The value with the pluses parsed out.
+ * @param {string} value - The value to parse.
+ * @returns {string} - The value with the pluses parsed out.
  */
 export function parsePluses(value) {
   // Match patterns with optional spaces around {+}
-  let match = value.match(/(\d+)\s*\{\+\}\s*(\d+)|\d+\{\+\}\d+/);
+  let match = RegExp(/(\d+)\s*\{\+\}\s*(\d+)|\d+\{\+\}\d+/).exec(value);
   if (!match) {
     return value;
   }
@@ -230,7 +225,7 @@ export function parsePluses(value) {
     const numbers = match[0].trim().split("{+}").map(Number);
     const result = numbers[0] + numbers[1];
     value = value.replace(match[0], result.toString());
-  } while ((match = value.match(/(\d+)\s*\{\+\}\s*(\d+)|\d+\{\+\}\d+/)));
+  } while ((match = RegExp(/(\d+)\s*\{\+\}\s*(\d+)|\d+\{\+\}\d+/).exec(value)));
 
   return value;
 }
@@ -314,4 +309,24 @@ export function parseNewlines(value, isSafeStringNeeded) {
     }
   }
   return { value, isSafeStringNeeded };
+}
+
+/**
+ * Clean a string of html injection.
+ * @param {string} str - The string to clean
+ * @returns {string} The cleaned string
+ * @memberof PartySheetForm
+ */
+export function cleanString(str) {
+  return str.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+}
+
+/**
+ * Remove trailing commas from a string.
+ * @param {string} str - The string to remove trailing commas from
+ * @returns {string} The string without trailing commas
+ * @memberof PartySheetForm
+ */
+export function removeTrailingComma(str) {
+  return str.replace(/,\s*$/, "");
 }

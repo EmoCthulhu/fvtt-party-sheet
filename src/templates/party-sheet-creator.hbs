@@ -1,51 +1,75 @@
 <div class="fvtt-party-sheet-creator">
   <div id="fvtt-creator-toolbar">
-    <button id="fvtt-creator-author-btn">Author Info</button>
-    <div id="fvtt-creator-column-block">
-      <p>Columns</p>
+    <div id="fvtt-sheet-info">
       <div>
-        <button id="fvtt-creator-column-dec-btn">
-          <i class="fas fa-minus"></i>
-        </button>
-        <input type="text" id="fvtt-creator-column-count" readonly value="1">
-        <button id="fvtt-creator-column-inc-btn">
-          <i class="fas fa-plus"></i>
-        </button>
+        <label for="fvtt-creator-sheet-name">Name:</label>
+        <input type="text" id="fvtt-creator-sheet-name" placeholder="Sheet Name" value="{{currentTemplateData.name}}">
+      </div>
+      <div>
+        <label for="fvtt-creator-sheet-system">System:</label>
+        <input type="text" id="fvtt-creator-sheet-system" readonly value="{{currentTemplateData.system}}">
+      </div>
+      <div>
+        <label for="fvtt-creator-sheet-author">Author:</label>
+        <input type="text" id="fvtt-creator-sheet-author" value="{{currentTemplateData.author}}">
+      </div>
+      <div>
+        <label for="fvtt-creator-sheet-demo-object">Demo Object:</label>
+        <div id="fvtt-creator-sheet-demo-object">{{currentFocusType}}</div>
       </div>
     </div>
-    <div id="fvtt-creator-row-block">
-      <p>Rows</p>
-      <div>
-        <button id="fvtt-creator-row-dec-btn">
-          <i class="fas fa-minus"></i>
-        </button>
-        <input type="text" id="fvtt-creator-row-count" readonly value="1">
-        <button id="fvtt-creator-row-inc-btn">
-          <i class="fas fa-plus"></i>
-        </button>
+    <button id="fvtt-creator-add-column-btn">Add Column</button>
+    <div id="fvtt-creator-tools">
+      <label for="fvtt-creator-col-name">Name:</label>
+      <input type="text" id="fvtt-creator-col-name" placeholder="Column Name"  value="{{curColumn.name}}">
+      <div class="fvtt-creator-grouper">
+        <label for="fvtt-creator-col-type">Type:</label>
+        <select id="fvtt-creator-col-type">
+          {{#each colTypes}}
+          <option value="{{this}}" {{#if (eq this ../curColumn.type)}}selected{{/if}}>{{this}}</option>
+          {{/each}}
+        </select>
+      </div>
+      <div id="fvtt-creator-dynamic-column">
+        {{#inArray curColumn.type (carray "direct" "array-string-builder" "string" "object-loop")}}
+          <label for="fvtt-creator-col-text">Text:</label>
+          <input type="text" id="fvtt-creator-col-text" class="dropzone" value="{{curColumn.text}}" >
+        {{/inArray}}
+        {{#inArray curColumn.type (carray "direct-complex")}}
+          <div class="fvtt-creator-grouper">
+            <label for="fvtt-creator-dc-type">Type:</label>
+            <select id="fvtt-creator-dc-type">
+              <option value="exists">exists</option>
+              <option value="match">match</option>
+              <option value="match-all">match-all</option>
+            </select>
+          </div>
+          <label for="fvtt-creator-dc-value">Value:</label>
+          <input type="text" id="fvtt-creator-dc-value" placeholder="Value">
+          <label for="fvtt-creator-dc-text">Text:</label>
+          <input type="text" id="fvtt-creator-dc-text" class="dropzone" placeholder="Text" value="{{curColumn.text}}">
+          <label for="fvtt-creator-dc-else">Else:</label>
+          <input type="text" id="fvtt-creator-dc-else" placeholder="Else">
+        {{/inArray}}
+        {{#inArray curColumn.type (carray "direct-complex" "charactersheet" "largest-from-array" "smallest-from-array")}}
+        {{/inArray}}
       </div>
     </div>
   </div>
-  <div id="fvtt-creator-select-zone">
-    {{#each coreItems}}
-    <div class="dd-item" data-itemkey="{{@key}}">{{@key}}</div>
-    {{/each}}
+  <div id="fvtt-creator-select-data">
+    <div>
+      {{chainAddress}}
+    </div>
+    <div id="fvtt-creator-select-zone">
+      {{#each coreItems}}
+      <div class="dd-item" draggable="true" data-itemkey="{{this}}" data-itemaddress="{{#if ../chainAddress}}{{../chainAddress}}.{{/if}}{{this}}">{{this}}</div>
+      {{/each}}
+    </div>
   </div>
   <div id="fvtt-creator-table-container">
-    <table id="fvtt-creator-table">
-      <thead>
-        <tr>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td></td>
-        </tr>
-      </tbody>
-    </table>
+    {{{table}}}
   </div>
   <div id="fvtt-creator-output">
-    <textarea id="fvtt-creator-output-textarea" readonly></textarea>
+    <textarea id="fvtt-creator-output-textarea" readonly>{{jsonDisplay}}</textarea>
   </div>
 </div>
