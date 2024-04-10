@@ -8,8 +8,8 @@
 /**
  * @typedef DirectComplexObject
  * @property {string} type - The type of comparison against the primary object
- * @property {string} value - The value to compare against the primary object
- * @property {string} text - The text to process if the comparison is true
+ * @property {string} [value] - The value to compare against the primary object
+ * @property {string} [text] - The text to process if the comparison is true
  * @property {string} [else] - The text to process if the comparison is false
  * @property {string} [ifdata] - The data to use for the comparison
  * @property {string} [matches] - The value to match against the primary object
@@ -21,7 +21,7 @@
  * @typedef SystemDataColumn
  * @property {string} name - The name of the column.
  * @property {SystemDataColumnType} type - The type of data to display. See below for details.
- * @property {SystemDataColumnHeader} header - Whether to show, hide, or skip the column.
+ * @property {SystemDataColumnHeader} [header] - Whether to show, hide, or skip the column.
  * @property {SystemDataColumnAlignType} [align] - The horizontal alignment of the column.
  * @property {SystemDataColumnVAlignType} [valign] - The vertical alignment of the column.
  * @property {number} [colspan] - The number of columns to span.

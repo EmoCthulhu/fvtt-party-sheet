@@ -192,6 +192,31 @@ export function extractPropertyByString(obj, path) {
 }
 
 /**
+ *
+ *
+ * @export
+ * @param {*} obj
+ * @param {*} path
+ * @param {*} value
+ */
+export function setPropertyByString(obj, path, value) {
+  const keys = path.split(".");
+  let currentObject = JSON.parse(JSON.stringify(obj)); // Deep copy of the object
+
+  for (let i = 0; i < keys.length; i++) {
+    if (i === keys.length - 1) {
+      currentObject[keys[i]] = value;
+    } else {
+      if (!currentObject[keys[i]]) {
+        currentObject[keys[i]] = {};
+      }
+      currentObject = currentObject[keys[i]];
+    }
+  }
+  return currentObject;
+}
+
+/**
  * Takes a JSON object and trims the strings for value, else, and match.
  * @param {import("./types").DirectComplexObject} item - The item to trim.
  * @returns {import("./types").DirectComplexObject}  - The item with trimmed strings.

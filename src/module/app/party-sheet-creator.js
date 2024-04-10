@@ -1,6 +1,7 @@
 /* eslint-disable no-undef */
 
 import { addColumn, delColumn, createTable, getColumnCount, addRow, delRow } from "../table-utils";
+import { setPropertyByString } from "../utils";
 import { colTypes, getCustomData } from "./parser";
 
 /**
@@ -34,6 +35,7 @@ export class PartySheetCreatorForm extends FormApplication {
       author: "",
       // @ts-ignore
       system: game.system.id,
+      /** @type {Array<Array<import("../types").SystemDataColumn>>} */
       rows: [
         [
           {
@@ -50,20 +52,26 @@ export class PartySheetCreatorForm extends FormApplication {
     this.currentTransferData = "";
     this.chainAddress = "";
     this.jsonDisplay = "";
+    this.subtype = "";
   }
 
   // eslint-disable-next-line no-unused-vars
-  _updateObject(event, formData) {
-    // @ts-ignore
-    console.log("Updating object");
-  }
+  _updateObject(event, formData) {}
 
+  /**
+   * Get the column at the specified row and column index
+   *
+   * @param {number} row - The row index
+   * @param {number} col - The column index
+   * @returns {import("../types").SystemDataColumn}  The column at the specified row and column index
+   * @memberof PartySheetCreatorForm
+   */
   getColumn(row, col) {
     return this.currentTemplateData.rows[row][col];
   }
 
   getData(options) {
-    const coreItems = [...Object.keys(this.inspect_objects), "<= back"];
+    const coreItems = this.currentFocusType ? [...Object.keys(this.inspect_objects), "<= back"] : [];
     // @ts-ignore
     return mergeObject(super.getData(options), {
       coreItems,
@@ -73,10 +81,12 @@ export class PartySheetCreatorForm extends FormApplication {
       selectedColumnIndex: this.selectedColumnIndex,
       selectedRowIndex: this.selectedRowIndex,
       currentFocusType: this.currentFocusType,
+      focusTypeList: this.base_inspect_objects ? Object.keys(this.base_inspect_objects) : [],
       chainAddress: this.chainAddress,
       curColumn: this.curColumn,
       curEditing: this.curEditing,
       jsonDisplay: this.jsonDisplay,
+      subtype: this.subtype,
       currentTemplateData: this.currentTemplateData,
       // @ts-ignore
       currentSystem: game.system.id,
@@ -123,10 +133,10 @@ export class PartySheetCreatorForm extends FormApplication {
 
   fetchCellData() {
     this.curColumn.name =
-      this.currentTemplateData.rows[this.selectedRowIndex][this.selectedColumnIndex]?.colName ?? "Unnamed";
+      this.currentTemplateData.rows[this.selectedRowIndex][this.selectedColumnIndex]?.name ?? "Unnamed";
     this.curColumn.type =
-      this.currentTemplateData.rows[this.selectedRowIndex][this.selectedColumnIndex]?.colType ?? "direct";
-    this.curColumn.text = this.currentTemplateData.rows[this.selectedRowIndex][this.selectedColumnIndex]?.colText ?? {};
+      this.currentTemplateData.rows[this.selectedRowIndex][this.selectedColumnIndex]?.type ?? "direct";
+    this.curColumn.text = this.currentTemplateData.rows[this.selectedRowIndex][this.selectedColumnIndex]?.text;
   }
   setCellData() {
     this.currentTemplateData.rows[this.selectedRowIndex][this.selectedColumnIndex] = {
@@ -150,12 +160,13 @@ export class PartySheetCreatorForm extends FormApplication {
     this.bindEvent('select[id="fvtt-creator-col-type"]', "change", this.handleColTypeChange, html);
     this.bindEvent('select[id="fvtt-creator-dc-type"]', "change", this.handleDCTypeChange, html);
     this.bindEvent('input[id="fvtt-creator-col-text"]', "change", this.handleColTextChange, html);
+    this.bindEvent('select[id="fvtt-creator-sheet-demo-select"]', "change", this.handleDemoChange, html);
+    this.bindEvent('input[class*="unitext"]', "change", this.universalTextChange, html);
 
     // @ts-ignore
     $("thead td", html).click((event) => {
       // @ts-ignore
       const index = $(event.currentTarget).index();
-      console.log(index);
       this.selectedColumnIndex = index;
       this.selectedRowIndex = 0;
 
@@ -206,10 +217,70 @@ export class PartySheetCreatorForm extends FormApplication {
     });
   }
 
-  handleDCTypeChange(event) {}
+  handleDemoChange(event) {
+    if (event.currentTarget.value === this.currentFocusType) {
+      // @ts-ignore
+      this.render(true);
+      return;
+    }
+    this.currentFocusType = event.currentTarget.value;
+    this.clearChain();
+    this.pushChain(this.currentFocusType, this.base_inspect_objects[this.currentFocusType]);
+    this.inspect_objects = this.inspect_objects[this.currentFocusType];
+    // @ts-ignore
+    const demoActor = game.actors.filter((actor) => actor.type === this.currentFocusType)[0] || null;
+    if (demoActor) {
+      this.demo_actor = demoActor;
+    }
+
+    this.updateTable();
+
+    // @ts-ignore
+    this.render(true);
+  }
+
+  handleDCTypeChange(event) {
+    this.subtype = event.currentTarget.value;
+    // @ts-ignore
+    this.render(true);
+  }
 
   getColumnByIndex(index) {
     return this.table.rows[0].cells[index];
+  }
+
+  universalTextChange(event) {
+    const arrIdx = 0;
+    // get the json address from the data-name attribute eg data-name="match"
+    // @ts-ignore
+    const address = event.currentTarget.dataset.name;
+    // @ts-ignore
+    const value = event.currentTarget.value;
+    if (!Array.isArray(this.curColumn.text)) {
+      this.curColumn.text = [];
+    }
+
+    let curItm = this.curColumn.text[arrIdx] ?? {};
+
+    if (this.subtype === "exists") {
+      curItm = {
+        type: "exists",
+        value: curItm.value ?? "",
+        text: curItm.text ?? "",
+        else: curItm.else ?? "",
+      };
+    } else if (this.subtype === "match") {
+      curItm = {
+        type: "match",
+        ifdata: curItm.ifdata ?? "",
+        matches: curItm.matches ?? "",
+        text: curItm.text ?? "",
+        else: curItm.else ?? "",
+      };
+    }
+
+    this.curColumn.text[arrIdx] = setPropertyByString(curItm, address, value);
+    this.updateColumn();
   }
 
   updateColumn() {
@@ -218,19 +289,22 @@ export class PartySheetCreatorForm extends FormApplication {
       type: this.curColumn.type,
       text: this.curColumn.text,
     };
-    console.log(this.selectedColumnIndex, this.selectedRowIndex);
-    console.log(this.curColumn);
 
+    this.updateTable();
+
+    // @ts-ignore
+    this.render(true);
+  }
+
+  updateTable() {
     this.table.tHead.rows[this.selectedRowIndex].cells[this.selectedColumnIndex].innerHTML = this.curColumn.name;
 
     let outStr = this.curColumn.text;
     let generated_dropdowns = 0;
 
-    console.log(this.demo_actor, this.curColumn.type, this.curColumn.text, generated_dropdowns);
     try {
       if (this.demo_actor) {
         outStr = getCustomData(this.demo_actor, this.curColumn.type, this.curColumn.text, generated_dropdowns);
-        console.log(outStr, typeof outStr);
       }
     } catch (ex) {
       console.log(ex);
@@ -241,9 +315,6 @@ export class PartySheetCreatorForm extends FormApplication {
     }
 
     this.jsonDisplay = JSON.stringify(this.currentTemplateData, null, 2);
-
-    // @ts-ignore
-    this.render(true);
   }
 
   handleColNameChange(event) {
@@ -262,7 +333,10 @@ export class PartySheetCreatorForm extends FormApplication {
     // @ts-ignore
     this.curEditing = "type";
     this.curColumn.type = colType;
-    console.log("new type", this.curColumn.type);
+    if (this.curColumn.type === "direct-complex") {
+      this.curColumn.text = [];
+      this.subtype = "exists";
+    }
     this.updateColumn();
   }
 
@@ -286,8 +360,6 @@ export class PartySheetCreatorForm extends FormApplication {
     if (this.chainAddress?.endsWith(".")) {
       this.chainAddress = this.chainAddress.substring(1);
     }
-    console.log(this.currentFocusChain);
-    console.log(this.chainAddress);
   }
 
   popChain() {
@@ -300,13 +372,14 @@ export class PartySheetCreatorForm extends FormApplication {
         this.chainAddress = this.chainAddress.substring(1);
       }
       return this.currentFocusChain.pop();
-    } else {
-      this.currentFocusType = null;
     }
 
-    console.log(this.chainAddress);
-
     return null;
+  }
+
+  clearChain() {
+    this.currentFocusChain = [];
+    this.chainAddress = "";
   }
 
   copyInspectObjects() {
@@ -315,11 +388,9 @@ export class PartySheetCreatorForm extends FormApplication {
   }
 
   processItemClick(itemkey) {
-    console.log("clicked", itemkey);
     if (itemkey === "<= back") {
       this.popChain();
       if (this.currentFocusChain.length === 0) {
-        this.currentFocusType = null;
         this.inspect_objects = this.copyInspectObjects();
       } else {
         this.inspect_objects = this.currentFocusChain[this.currentFocusChain.length - 1].item;
@@ -327,22 +398,17 @@ export class PartySheetCreatorForm extends FormApplication {
       // @ts-ignore
     } else if (Array.isArray(this.inspect_objects[itemkey]) || typeof this.inspect_objects[itemkey] === "object") {
       if (this.currentFocusType === null) {
-        const type_name = itemkey;
-        console.log("About to start grabbing ", type_name);
-        // @ts-ignore
-        const demo_actor = game.actors.filter((actor) => actor.type === type_name)[0] || null;
-        if (demo_actor) {
-          this.demo_actor = demo_actor;
-          this.currentFocusType = type_name;
-          this.updateColumn();
-        }
+        this.updateColumn();
       }
 
       this.pushChain(itemkey, this.inspect_objects[itemkey]);
       this.inspect_objects = this.inspect_objects[itemkey];
     }
     // @ts-ignore
-    this.render(true);
+    setTimeout(() => {
+      // @ts-ignore
+      this.render(true);
+    }, 100);
   }
 
   handleFocusItemClick(event) {

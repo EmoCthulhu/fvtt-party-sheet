@@ -29,7 +29,6 @@ export const colTypes = [
  * @memberof PartySheetForm
  */
 export function getCustomData(character, type, value, generated_dropdowns) {
-  console.log(type);
   try {
     switch (type) {
       case "direct":

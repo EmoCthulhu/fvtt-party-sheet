@@ -285,8 +285,6 @@ export class PartySheetForm extends FormApplication {
 
   // eslint-disable-next-line no-unused-vars
   openCreator(event) {
-    // Fire the hook "openPartySheetCreator"
-    console.log("firing hook");
     // @ts-ignore
     Hooks.call("renderPartySheetCreator");
   }

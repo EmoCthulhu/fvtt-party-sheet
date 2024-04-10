@@ -1,3 +1,6 @@
+.flex-spacer {
+  flex-grow: 1;
+}
 #fvtt-party-sheet-system-select {
   display: flex;
   margin-top: 0.25rem;
@@ -162,7 +165,7 @@ q
     flex-direction: row;
     flex-wrap: nowrap;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
 
     button {
       margin-right: 5px;
@@ -170,15 +173,23 @@ q
       max-height:50px;
     }
 
-    #fvtt-creator-tools {
-      .fvtt-creator-grouper {
-        display:flex;
-        flex-direction:column;
-        flex-wrap:nowrap;
-        flex-shrink: 1;
-      }
-    }
+  }
 
+  #fvtt-creator-tools {
+    display:flex;
+    flex-direction:row;
+    flex-wrap:nowrap;
+    flex-shrink: 1;
+    gap: 5px;
+    align-items: start;
+    width:100%;
+
+    .fvtt-creator-dynamic-column {
+      display: flex;
+      flex-direction:column;
+      flex-wrap: nowrap;
+      width: 100%;
+    }
   }
 
   #fvtt-creator-select-data {

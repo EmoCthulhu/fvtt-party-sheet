@@ -14,15 +14,23 @@
         <input type="text" id="fvtt-creator-sheet-author" value="{{currentTemplateData.author}}">
       </div>
       <div>
-        <label for="fvtt-creator-sheet-demo-object">Demo Object:</label>
-        <div id="fvtt-creator-sheet-demo-object">{{currentFocusType}}</div>
+        <label for="fvtt-creator-sheet-demo-select">Demo Object:</label>
+        <select id="fvtt-creator-sheet-demo-select">
+          <option value="" selected>Select One</option>
+          {{#each focusTypeList}}
+          <option value="{{this}}" {{#if (eq this ../currentFocusType)}}selected{{/if}}>{{this}}</option>
+          {{/each}}
+        </select>
       </div>
     </div>
     <button id="fvtt-creator-add-column-btn">Add Column</button>
     <div id="fvtt-creator-tools">
-      <label for="fvtt-creator-col-name">Name:</label>
-      <input type="text" id="fvtt-creator-col-name" placeholder="Column Name"  value="{{curColumn.name}}">
-      <div class="fvtt-creator-grouper">
+
+      <div class="fvtt-creator-dynamic-column">
+        <p> Column Info </p>
+        <div class="flex-spacer"></div>
+        <label for="fvtt-creator-col-name">Name:</label>
+        <input type="text" id="fvtt-creator-col-name" placeholder="Column Name"  value="{{curColumn.name}}">
         <label for="fvtt-creator-col-type">Type:</label>
         <select id="fvtt-creator-col-type">
           {{#each colTypes}}
@@ -30,30 +38,60 @@
           {{/each}}
         </select>
       </div>
-      <div id="fvtt-creator-dynamic-column">
-        {{#inArray curColumn.type (carray "direct" "array-string-builder" "string" "object-loop")}}
+
+      {{#inArray curColumn.type (carray "direct" "array-string-builder" "string" "object-loop")}}
+        <div class="fvtt-creator-dynamic-column">
+          <p> Direct Settings </p>
+          <div class="flex-spacer"></div>
           <label for="fvtt-creator-col-text">Text:</label>
           <input type="text" id="fvtt-creator-col-text" class="dropzone" value="{{curColumn.text}}" >
-        {{/inArray}}
-        {{#inArray curColumn.type (carray "direct-complex")}}
-          <div class="fvtt-creator-grouper">
+        </div>
+      {{/inArray}}
+
+      {{#inArray curColumn.type (carray "direct-complex")}}
+        <div class="fvtt-creator-dynamic-column">
+            <p> Direct-Complex Info </p>
+            <div class="flex-spacer"></div>
             <label for="fvtt-creator-dc-type">Type:</label>
             <select id="fvtt-creator-dc-type">
-              <option value="exists">exists</option>
-              <option value="match">match</option>
-              <option value="match-all">match-all</option>
+              <option value="exists" {{#inArray subtype (carray "exists") }}selected{{/inArray}}>exists</option>
+              <option value="match" {{#inArray subtype (carray "match") }}selected{{/inArray}}>match</option>
+              <option value="match-all" {{#inArray subtype (carray "match-all") }}selected{{/inArray}}>match-all</option>
             </select>
+        </div>
+      {{/inArray}}
+
+      {{#inArray curColumn.type (carray "direct-complex" "charactersheet" "largest-from-array" "smallest-from-array")}}
+      {{/inArray}}
+
+      {{#inArray curColumn.type (carray "direct-complex")}}
+        {{#inArray subtype (carray "exists")}}
+          <div class="fvtt-creator-dynamic-column">
+            <p> Direct-Complex Exists </p>
+            <div class="flex-spacer"></div>
+            <label for="fvtt-creator-dc-value">If this exists:</label>
+            <input type="text" class="unitext" id="fvtt-creator-dc-value" data-name="value" placeholder="system.afflictions.poison" value="{{curColumn.text.0.value}}">
+            <label for="fvtt-creator-dc-text">Show This:</label>
+            <input type="text" class="unitext" id="fvtt-creator-dc-text" data-name="text" class="dropzone" placeholder="Poisoned" value="{{curColumn.text.0.text}}">
+            <label for="fvtt-creator-dc-else">Else Show This:</label>
+            <input type="text" class="unitext" id="fvtt-creator-dc-else" data-name="else" placeholder="" value="{{curColumn.text.0.else}}">
           </div>
-          <label for="fvtt-creator-dc-value">Value:</label>
-          <input type="text" id="fvtt-creator-dc-value" placeholder="Value">
-          <label for="fvtt-creator-dc-text">Text:</label>
-          <input type="text" id="fvtt-creator-dc-text" class="dropzone" placeholder="Text" value="{{curColumn.text}}">
-          <label for="fvtt-creator-dc-else">Else:</label>
-          <input type="text" id="fvtt-creator-dc-else" placeholder="Else">
         {{/inArray}}
-        {{#inArray curColumn.type (carray "direct-complex" "charactersheet" "largest-from-array" "smallest-from-array")}}
+        {{#inArray subtype (carray "match")}}
+        <div class="fvtt-creator-dynamic-column">
+          <p></p>
+          <div class="flex-spacer"></div>
+          <label for="fvtt-creator-dc-ifdata">If This:</label>
+          <input type="text" class="unitext" id="fvtt-creator-dc-ifdata" placeholder="system.attributes.str" data-name="ifdata" value="{{curColumn.text.0.ifdata}}">
+          <label for="fvtt-creator-dc-matches">Equals This:</label>
+          <input type="text" class="unitext" id="fvtt-creator-dc-matches" placeholder="8" data-name="matches" value="{{curColumn.text.0.matches}}">
+          <label for="fvtt-creator-dc-text">Show This:</label>
+          <input type="text" class="unitext" id="fvtt-creator-dc-text" class="dropzone" placeholder="I Dumb" data-name="text" value="{{curColumn.text.0.text}}">
+          <label for="fvtt-creator-dc-else">Else Show This:</label>
+          <input type="text" class="unitext" id="fvtt-creator-dc-else" placeholder="I'm Smart" data-name="else" value="{{curColumn.text.0.else}}">
+        </div>
         {{/inArray}}
-      </div>
+      {{/inArray}}
     </div>
   </div>
   <div id="fvtt-creator-select-data">
