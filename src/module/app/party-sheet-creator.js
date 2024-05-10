@@ -207,6 +207,7 @@ export class PartySheetCreatorForm extends FormApplication {
     this.bindEvent('button[id="fvtt-creator-remove-column-btn"]', "click", this.handleRemSubColumn, html);
     this.bindEvent('select[id="subselector"]', "change", this.handleSelectSubItem, html);
     this.bindEvent('input[id="fvtt-creator-col-header"]', "change", this.handleColHeaderChange, html);
+    this.bindEvent('button[id="fvtt-creator-export-btn"]', "click", this.handleExport, html);
 
     // @ts-ignore
     $("thead td", html).click((event) => {
@@ -250,6 +251,17 @@ export class PartySheetCreatorForm extends FormApplication {
       element.addEventListener("dragenter", (event) => {
         event.preventDefault();
       });
+    });
+  }
+
+  // eslint-disable-next-line no-unused-vars
+  handleExport(_event) {
+    const json = JSON.stringify(this.currentTemplateData, null, 2);
+    // Copy the JSON to the clipboard
+    // @ts-ignore
+    navigator.clipboard.writeText(json).then(() => {
+      // @ts-ignore
+      ui.notifications.info("Party Sheet JSON copied to clipboard.");
     });
   }
 
