@@ -29,8 +29,12 @@
       <div class="fvtt-creator-dynamic-column">
         <p> Column Info </p>
         <div class="flex-spacer"></div>
-        <label for="fvtt-creator-col-name">Name:</label>
-        <input type="text" id="fvtt-creator-col-name" placeholder="Column Name"  value="{{curColumn.name}}">
+        <div style="display:flex;flex-direction:row;flex-wrap:nowrap;">
+          <label for="fvtt-creator-col-name">Name:</label>
+          <input type="text" id="fvtt-creator-col-name" placeholder="Column Name"  value="{{curColumn.name}}">
+          <label for="fvtt-creator-col-header">Show?</label>
+          <input type="checkbox" id="fvtt-creator-col-header" {{#ifCond curColumn.header "==" "show"}}checked{{/ifCond}}>
+        </div>
         <label for="fvtt-creator-col-type">Type:</label>
         <select id="fvtt-creator-col-type">
           {{#each colTypes}}
@@ -65,36 +69,53 @@
       {{/inArray}}
 
       {{#inArray curColumn.type (carray "direct-complex")}}
+
         {{#inArray subtype (carray "exists")}}
           <div class="fvtt-creator-dynamic-column">
             <p> Direct-Complex Exists </p>
             <div class="flex-spacer"></div>
-            <label for="fvtt-creator-dc-value">If this exists:</label>
-            <input type="text" class="unitext" id="fvtt-creator-dc-value" data-name="value" placeholder="system.afflictions.poison" value="{{curColumn.text.0.value}}">
-            <label for="fvtt-creator-dc-text">Show This:</label>
-            <input type="text" class="unitext" id="fvtt-creator-dc-text" data-name="text" class="dropzone" placeholder="Poisoned" value="{{curColumn.text.0.text}}">
+            <label for="fvtt-creator-dc-value" class="required">If this exists:</label>
+            <input type="text" class="unitext" id="fvtt-creator-dc-value" data-name="value" placeholder="system.afflictions.poison" value="{{#with (lookup curColumn.text selectedSubItemIndex)}}{{value}}{{/with}}">
+            <label for="fvtt-creator-dc-text" class="required">Show This:</label>
+            <input type="text" class="unitext" id="fvtt-creator-dc-text" data-name="text" class="dropzone" placeholder="Poisoned" value="{{#with (lookup curColumn.text selectedSubItemIndex)}}{{text}}{{/with}}">
             <label for="fvtt-creator-dc-else">Else Show This:</label>
-            <input type="text" class="unitext" id="fvtt-creator-dc-else" data-name="else" placeholder="" value="{{curColumn.text.0.else}}">
+            <input type="text" class="unitext" id="fvtt-creator-dc-else" data-name="else" placeholder="" value="{{#with (lookup curColumn.text selectedSubItemIndex)}}{{this.else}}{{/with}}">
           </div>
         {{/inArray}}
         {{#inArray subtype (carray "match")}}
+
         <div class="fvtt-creator-dynamic-column">
           <p></p>
           <div class="flex-spacer"></div>
           <label for="fvtt-creator-dc-ifdata">If This:</label>
-          <input type="text" class="unitext" id="fvtt-creator-dc-ifdata" placeholder="system.attributes.str" data-name="ifdata" value="{{curColumn.text.0.ifdata}}">
+          <input type="text" class="unitext" id="fvtt-creator-dc-ifdata" placeholder="system.attributes.str" data-name="ifdata" value="{{#with (lookup curColumn.text selectedSubItemIndex)}}{{ifdata}}{{/with}}">
           <label for="fvtt-creator-dc-matches">Equals This:</label>
-          <input type="text" class="unitext" id="fvtt-creator-dc-matches" placeholder="8" data-name="matches" value="{{curColumn.text.0.matches}}">
+          <input type="text" class="unitext" id="fvtt-creator-dc-matches" placeholder="8" data-name="matches" value="{{#with (lookup curColumn.text selectedSubItemIndex)}}{{matches}}{{/with}}">
           <label for="fvtt-creator-dc-text">Show This:</label>
-          <input type="text" class="unitext" id="fvtt-creator-dc-text" class="dropzone" placeholder="I Dumb" data-name="text" value="{{curColumn.text.0.text}}">
+          <input type="text" class="unitext" id="fvtt-creator-dc-text" class="dropzone" placeholder="I Dumb" data-name="text" value="{{#with (lookup curColumn.text selectedSubItemIndex)}}{{text}}{{/with}}">
           <label for="fvtt-creator-dc-else">Else Show This:</label>
-          <input type="text" class="unitext" id="fvtt-creator-dc-else" placeholder="I'm Smart" data-name="else" value="{{curColumn.text.0.else}}">
+          <input type="text" class="unitext" id="fvtt-creator-dc-else" placeholder="I'm Smart" data-name="else" value="{{#with (lookup curColumn.text selectedSubItemIndex)}}{{this.else}}{{/with}}">
         </div>
         {{/inArray}}
+        <div class="fvtt-creator-dynamic-column">
+          <p></p>
+          <button id="fvtt-creator-add-subcolumn-btn">Add Sub Column</button>
+          <button id="fvtt-creator-remove-subcolumn-btn">Remove Sub Column</button>
+          <div class="flex-spacer"></div>
+          <label for="fvtt-creator-col-subname">Select Column:</label>
+          <select id="subselector" name="subselector" multiple="multiple" aria-multiselectable="false" aria-multiline="false">
+            {{#each curColumn.text as |subitem|}}
+            <option value="{{subitem.type}}_{{@index}}" {{#if (eq @index 0)}}selected{{/if}}>{{@index}}) {{subitem.type}}</option>
+            {{/each}}
+          </select>
+        </div>
       {{/inArray}}
     </div>
   </div>
   <div id="fvtt-creator-select-data">
+    {{#if errorMsg}}
+    <p class="errorMsg">{{errorMsg}}</p>
+    {{/if}}
     <div>
       {{chainAddress}}
     </div>

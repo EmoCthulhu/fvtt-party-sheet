@@ -39,6 +39,7 @@ export class PartySheetCreatorForm extends FormApplication {
       rows: [
         [
           {
+            header: "show",
             name: "Unnamed",
             type: "direct",
             text: "",
@@ -53,10 +54,13 @@ export class PartySheetCreatorForm extends FormApplication {
     this.chainAddress = "";
     this.jsonDisplay = "";
     this.subtype = "";
+    this.errorMsg = "";
+    this.selectedSubItemIndex = 0;
+    this.highlightSelectedColumn();
   }
 
   // eslint-disable-next-line no-unused-vars
-  _updateObject(event, formData) {}
+  _updateObject(_event, _formData) {}
 
   /**
    * Get the column at the specified row and column index
@@ -92,6 +96,8 @@ export class PartySheetCreatorForm extends FormApplication {
       currentSystem: game.system.id,
       colTypes,
       table: this.table.outerHTML,
+      errorMsg: this.errorMsg,
+      selectedSubItemIndex: this.selectedSubItemIndex,
     });
   }
 
@@ -137,13 +143,48 @@ export class PartySheetCreatorForm extends FormApplication {
     this.curColumn.type =
       this.currentTemplateData.rows[this.selectedRowIndex][this.selectedColumnIndex]?.type ?? "direct";
     this.curColumn.text = this.currentTemplateData.rows[this.selectedRowIndex][this.selectedColumnIndex]?.text;
+    this.curColumn.header =
+      this.currentTemplateData.rows[this.selectedRowIndex][this.selectedColumnIndex]?.header ?? "show";
   }
   setCellData() {
     this.currentTemplateData.rows[this.selectedRowIndex][this.selectedColumnIndex] = {
       name: this.curColumn.name,
       type: this.curColumn.type,
       text: this.curColumn.text,
+      header: this.curColumn.header,
     };
+  }
+
+  highlightSelectedColumn() {
+    const rowCount = this.table.tHead.rows.length;
+    for (let i = 0; i < rowCount; i++) {
+      const cellCount = this.table.tHead.rows[i].cells.length;
+      for (let j = 0; j < cellCount; j++) {
+        const cell = this.table.tHead.rows[i].cells[j];
+        if (cell.classList.contains("selectedColumn")) {
+          cell.classList.remove("selectedColumn");
+        }
+      }
+    }
+    let cl = this.table.tHead.rows[this.selectedRowIndex].cells[this.selectedColumnIndex].classList;
+    if (!cl.contains("selectedColumn")) {
+      cl.add("selectedColumn");
+    }
+  }
+
+  selectColumnByIndex(index) {
+    this.selectedColumnIndex = index;
+    this.selectedRowIndex = 0;
+
+    this.highlightSelectedColumn();
+
+    this.fetchCellData();
+
+    this.curEditing = "none";
+
+    this.jsonDisplay = JSON.stringify(this.currentTemplateData, null, 2);
+    // @ts-ignore
+    this.render(true);
   }
 
   activateListeners(html) {
@@ -162,21 +203,16 @@ export class PartySheetCreatorForm extends FormApplication {
     this.bindEvent('input[id="fvtt-creator-col-text"]', "change", this.handleColTextChange, html);
     this.bindEvent('select[id="fvtt-creator-sheet-demo-select"]', "change", this.handleDemoChange, html);
     this.bindEvent('input[class*="unitext"]', "change", this.universalTextChange, html);
+    this.bindEvent('button[id="fvtt-creator-add-subcolumn-btn"]', "click", this.handleAddSubColumn, html);
+    this.bindEvent('button[id="fvtt-creator-remove-column-btn"]', "click", this.handleRemSubColumn, html);
+    this.bindEvent('select[id="subselector"]', "change", this.handleSelectSubItem, html);
+    this.bindEvent('input[id="fvtt-creator-col-header"]', "change", this.handleColHeaderChange, html);
 
     // @ts-ignore
     $("thead td", html).click((event) => {
       // @ts-ignore
       const index = $(event.currentTarget).index();
-      this.selectedColumnIndex = index;
-      this.selectedRowIndex = 0;
-
-      this.fetchCellData();
-
-      this.curEditing = "none";
-
-      this.jsonDisplay = JSON.stringify(this.currentTemplateData, null, 2);
-      // @ts-ignore
-      this.render(true);
+      this.selectColumnByIndex(index);
     });
 
     const draggableElements = document.querySelectorAll('div[draggable="true"]');
@@ -217,6 +253,66 @@ export class PartySheetCreatorForm extends FormApplication {
     });
   }
 
+  // eslint-disable-next-line no-unused-vars
+  handleColHeaderChange(_event) {
+    this.curColumn.header = this.curColumn.header == "show" ? "hide" : "show";
+    this.updateColumn();
+  }
+
+  handleSelectSubItem(event) {
+    // Get the index of the event.currentTarget.value in the Select
+    if (event.currentTarget.selectedIndex === this.selectedSubItemIndex) {
+      return false;
+    }
+    this.selectedSubItemIndex = event.currentTarget.selectedIndex;
+
+    // @ts-ignore
+    this.render(true);
+  }
+
+  handleAddSubColumn() {
+    let validated = false;
+    if (this.subtype === "exists") {
+      validated = this.validateExistsColumns();
+    }
+
+    if (validated) {
+      this.addSubTypeColumn();
+    }
+
+    // @ts-ignore
+    this.render(true);
+  }
+
+  handleRemSubColumn() {}
+
+  addSubTypeColumn() {
+    this.selectedSubItemIndex += 1;
+    // @ts-ignore
+    this.curColumn.text.push({
+      type: this.subtype,
+      value: "",
+      text: "",
+      else: "",
+    });
+  }
+
+  clearError() {
+    this.errorMsg = "";
+    // @ts-ignore
+    this.render(true);
+  }
+
+  validateExistsColumns() {
+    this.errorMsg = "";
+    // @ts-ignore
+    if ($("#fvtt-creator-dc-ifdata").val() === "" || $("#fvtt-creator-dc-text").val() === "") {
+      this.errorMsg = "Please fill out required fields.";
+      return false;
+    }
+    return true;
+  }
+
   handleDemoChange(event) {
     if (event.currentTarget.value === this.currentFocusType) {
       // @ts-ignore
@@ -250,7 +346,6 @@ export class PartySheetCreatorForm extends FormApplication {
   }
 
   universalTextChange(event) {
-    const arrIdx = 0;
     // get the json address from the data-name attribute eg data-name="match"
     // @ts-ignore
     const address = event.currentTarget.dataset.name;
@@ -260,27 +355,36 @@ export class PartySheetCreatorForm extends FormApplication {
       this.curColumn.text = [];
     }
 
-    let curItm = this.curColumn.text[arrIdx] ?? {};
+    this.curColumn.text[this.selectedSubItemIndex] = setPropertyByString(this.generateSubItem(), address, value);
+    this.updateColumn();
+  }
 
+  generateSubItem() {
+    let curItm = this.curColumn.text[this.selectedSubItemIndex] ?? {};
     if (this.subtype === "exists") {
       curItm = {
         type: "exists",
+        // @ts-ignore
         value: curItm.value ?? "",
+        // @ts-ignore
         text: curItm.text ?? "",
+        // @ts-ignore
         else: curItm.else ?? "",
       };
     } else if (this.subtype === "match") {
       curItm = {
         type: "match",
+        // @ts-ignore
         ifdata: curItm.ifdata ?? "",
+        // @ts-ignore
         matches: curItm.matches ?? "",
+        // @ts-ignore
         text: curItm.text ?? "",
+        // @ts-ignore
         else: curItm.else ?? "",
       };
     }
-
-    this.curColumn.text[arrIdx] = setPropertyByString(curItm, address, value);
-    this.updateColumn();
+    return curItm;
   }
 
   updateColumn() {
@@ -288,6 +392,7 @@ export class PartySheetCreatorForm extends FormApplication {
       name: this.curColumn.name,
       type: this.curColumn.type,
       text: this.curColumn.text,
+      header: this.curColumn.header,
     };
 
     this.updateTable();
@@ -297,7 +402,8 @@ export class PartySheetCreatorForm extends FormApplication {
   }
 
   updateTable() {
-    this.table.tHead.rows[this.selectedRowIndex].cells[this.selectedColumnIndex].innerHTML = this.curColumn.name;
+    this.table.tHead.rows[this.selectedRowIndex].cells[this.selectedColumnIndex].innerHTML =
+      this.curColumn.header === "show" ? this.curColumn.name : "";
 
     let outStr = this.curColumn.text;
     let generated_dropdowns = 0;
@@ -435,6 +541,7 @@ export class PartySheetCreatorForm extends FormApplication {
     addColumn(this.table, "Unnamed");
     this.currentColumnCount = column_count + 1;
     this.selectedColumnIndex = column_count;
+    this.selectColumnByIndex(this.selectedColumnIndex);
     // @ts-ignore
     this.render(true);
   }

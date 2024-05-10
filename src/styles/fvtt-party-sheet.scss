@@ -240,3 +240,18 @@ q
     }
   }
 }
+
+.required::after {
+  color:red;
+  content: "*";
+}
+
+.errorMsg {
+  color: red;
+  display: flex;
+  align-self: center;
+}
+
+.selectedColumn {
+  background-color:red;
+}
